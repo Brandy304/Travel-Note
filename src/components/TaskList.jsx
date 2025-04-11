@@ -19,7 +19,7 @@ export default function TaskList() {
       ) : (
         tasks.map(task => (
           <div key={task.id} className="task-card">
-            <h3>{task.title}</h3>
+            <h3>{task.description}</h3> {/* ✅ Fixed field name */}
             {task.photo && <img src={task.photo} alt="Location" />}
             <p>Location: {task.location?.lat}, {task.location?.lng}</p>
           </div>
