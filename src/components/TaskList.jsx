@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { getNotes } from '../db';
 
@@ -18,11 +19,11 @@ export default function TaskList() {
         <p>No travel notes yet. Add your first adventure!</p>
       ) : (
         tasks.map(task => (
-          <div key={task.id} className="task-card">
-            <h3>{task.description}</h3> {/* ✅ Fixed field name */}
+          <Link to={`/detail/${task.id}`} key={task.id} className="task-card" style={{ textDecoration: 'none', color: 'inherit' }}>
+            <h3>{task.description}</h3>
             {task.photo && <img src={task.photo} alt="Location" />}
             <p>Location: {task.location?.lat}, {task.location?.lng}</p>
-          </div>
+          </Link>
         ))
       )}
     </div>
