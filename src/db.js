@@ -20,13 +20,25 @@ export const initDB = () => {
   });
 };
 
-// CRUD Operations
+// Save or update a note locally and sync to server
 export const saveNote = async (note) => {
   const db = await initDB();
   const tx = db.transaction(STORE_NAME, 'readwrite');
   tx.objectStore(STORE_NAME).put(note);
+
+  // Sync with backend
+  try {
+    await fetch('https://travel-note-server.onrender.com/api/location', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(note),
+    });
+  } catch (error) {
+    console.error('Failed to sync note to server:', error);
+  }
 };
 
+// Get all notes from local IndexedDB
 export const getNotes = async () => {
   const db = await initDB();
   return new Promise((resolve) => {
@@ -34,4 +46,20 @@ export const getNotes = async () => {
     const request = tx.objectStore(STORE_NAME).getAll();
     request.onsuccess = () => resolve(request.result);
   });
+};
+
+// Delete a note locally and notify the server
+export const deleteNote = async (id) => {
+  const db = await initDB();
+  const tx = db.transaction(STORE_NAME, 'readwrite');
+  tx.objectStore(STORE_NAME).delete(id);
+
+  // Sync deletion with backend
+  try {
+    await fetch(`https://travel-note-server.onrender.com/api/location/${id}`, {
+      method: 'DELETE',
+    });
+  } catch (error) {
+    console.error('Failed to delete note on server:', error);
+  }
 };
