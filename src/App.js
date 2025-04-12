@@ -5,17 +5,15 @@ import {
   BrowserRouter as Router,
   Routes,
   Route,
-  Link,
-  useNavigate,
 } from 'react-router-dom';
 
-import Camera from './components/Camera';
-import Map from './components/Map';
 import NotesPage from './components/NotesPage';
 import TaskForm from './components/TaskForm';
 import TaskList from './components/TaskList';
 import TaskDetail from './components/TaskDetail';
 import TaskEdit from './components/TaskEdit';
+import Home from './components/Home';            
+import Features from './components/Features';    
 
 function StatusBar({ status }) {
   return (
@@ -25,46 +23,11 @@ function StatusBar({ status }) {
   );
 }
 
-function Home() {
-  return (
-    <header className="App-header">
-      <img src="/travel-note-logo.png" className="App-logo" alt="Travel Note Logo" />
-      <h1>Welcome to Travel Note</h1>
-      <p>Record and share your travel experiences easily.</p>
-
-      <Link to="/features">
-        <button style={{ marginTop: '15px' }}>📸 Start Journey</button>
-      </Link>
-      <Link to="/new">
-        <button style={{ marginTop: '10px' }}>➕ Add Travel Note</button>
-      </Link>
-      <Link to="/notes">
-        <button style={{ marginTop: '10px' }}>📖 View My Journey</button>
-      </Link>
-    </header>
-  );
-}
-
-function Features() {
-  const navigate = useNavigate();
-  return (
-    <div style={{ padding: '20px' }}>
-      <button onClick={() => navigate('/')} style={{ marginBottom: '20px' }}>← Back to Home</button>
-      <h2>Capture Your Travel</h2>
-      <h3>Camera</h3>
-      <Camera />
-      <h3 style={{ marginTop: '20px' }}>Location</h3>
-      <Map />
-    </div>
-  );
-}
-
 function App() {
   const [statusMessage, setStatusMessage] = useState('🌐 Waiting to send location...');
   const lastSuccessTime = useRef(null);
   const retrying = useRef(false);
 
-  // 自动发送地理位置
   useEffect(() => {
     const sendLocation = () => {
       if (!navigator.geolocation) {
@@ -111,7 +74,7 @@ function App() {
       if (!last || diffMins >= 30 || (retrying.current && diffMins >= 3)) {
         sendLocation();
       }
-    }, 60 * 1000); // 每分钟检查
+    }, 60 * 1000); 
 
     return () => clearInterval(interval);
   }, []);

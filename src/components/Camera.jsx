@@ -1,56 +1,49 @@
-// src/components/Camera.jsx
+// components/Camera.jsx
 import React, { useRef, useState } from 'react';
-import { saveNote } from '../db';
 
-const Camera = () => {
+const Camera = ({ onCapture }) => {
   const videoRef = useRef(null);
-  const [photo, setPhoto] = useState(null);
+  const canvasRef = useRef(null);
+  const [streaming, setStreaming] = useState(false);
 
-  const startCamera = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      videoRef.current.srcObject = stream;
-    } catch (error) {
-      alert('Camera access denied: ' + error.message);
-    }
+  const startCamera = () => {
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => {
+        videoRef.current.srcObject = stream;
+        videoRef.current.play();
+        setStreaming(true);
+      })
+      .catch(err => {
+        alert('Error accessing camera: ' + err.message);
+      });
   };
 
   const capturePhoto = () => {
-    const canvas = document.createElement('canvas');
-    canvas.width = videoRef.current.videoWidth;
-    canvas.height = videoRef.current.videoHeight;
-    canvas.getContext('2d').drawImage(videoRef.current, 0, 0);
-    const photoData = canvas.toDataURL('image/jpeg');
-    setPhoto(photoData);
-
-    // Save with location
-    navigator.geolocation.getCurrentPosition(
-      async pos => {
-        const note = {
-          id: Date.now(),
-          photo: photoData,
-          description: 'A note from camera',
-          date: new Date().toLocaleDateString(),
-          location: {
-            lat: pos.coords.latitude,
-            lng: pos.coords.longitude
-          }
-        };
-        await saveNote(note);
-        alert('Photo saved with location!');
-      },
-      err => alert('Geolocation failed: ' + err.message)
-    );
+    const canvas = canvasRef.current;
+    const video = videoRef.current;
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext('2d').drawImage(video, 0, 0);
+    const imageDataUrl = canvas.toDataURL('image/png');
+    onCapture(imageDataUrl);
   };
 
   return (
-    <div>
-      <video ref={videoRef} autoPlay playsInline style={{ width: '100%', maxHeight: '300px' }} />
-      <div>
-        <button onClick={startCamera}>Start Camera</button>
-        <button onClick={capturePhoto}>Take & Save</button>
-      </div>
-      {photo && <img src={photo} alt="Captured" style={{ marginTop: '20px', maxWidth: '100%' }} />}
+    <div className="camera-container">
+      {!streaming && (
+        <button onClick={startCamera}>
+          📸 Start Camera
+        </button>
+      )}
+      <video ref={videoRef} style={{ width: '100%', display: streaming ? 'block' : 'none' }} />
+      {streaming && (
+        <>
+          <button onClick={capturePhoto}>
+            📷 Capture Photo
+          </button>
+          <canvas ref={canvasRef} style={{ display: 'none' }} />
+        </>
+      )}
     </div>
   );
 };
