@@ -7,26 +7,45 @@ import { saveNote } from '../db';
 function Features() {
   const navigate = useNavigate();
 
-  // State to hold the captured photo
   const [photo, setPhoto] = useState(null);
+  const [location, setLocation] = useState(null);
+  const [locationError, setLocationError] = useState(null);
 
-  // Handle the photo capture event
+  // Get current location from browser
+  const handleLocation = () => {
+    if (!navigator.geolocation) {
+      setLocationError('❌ Geolocation is not supported.');
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setLocation({
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude
+        });
+        setLocationError(null);
+      },
+      (err) => {
+        setLocationError('❌ Failed to get location: ' + err.message);
+      }
+    );
+  };
+
+  // Capture and save the travel note
   const handleCapture = async (capturedPhoto) => {
     setPhoto(capturedPhoto);
 
-    // Example of saving captured photo to IndexedDB
     const note = {
       id: Date.now(),
       description: "Captured during travel",
-      location: null, // You can add geolocation later
+      location,
       photo: capturedPhoto,
       date: new Date().toLocaleString()
     };
 
     await saveNote(note);
-    
-    // Notify the user and navigate to notes page
-    alert('✅ Photo captured and saved successfully!');
+    alert('✅ Photo and location saved!');
     navigate('/notes');
   };
 
@@ -45,19 +64,7 @@ function Features() {
         alignItems: 'center'
       }}
     >
-      <button
-        onClick={() => navigate('/')}
-        style={{
-          alignSelf: 'flex-start',
-          marginBottom: '15px',
-          backgroundColor: '#6c5ce7',
-          color: '#fff',
-          padding: '8px 16px',
-          border: 'none',
-          borderRadius: '4px',
-          cursor: 'pointer'
-        }}
-      >
+      <button onClick={() => navigate('/')} style={{ alignSelf: 'flex-start', marginBottom: '15px' }}>
         ← Back to Home
       </button>
 
@@ -65,38 +72,38 @@ function Features() {
         🌍 Capture Your Travel Moments
       </h2>
 
-      {/* Camera Section */}
+      {/* Camera */}
       <section style={{ marginBottom: '25px', width: '100%' }}>
-        <h3 style={{ marginBottom: '10px' }}>
-          📷 Take a Photo
-        </h3>
-        <div style={{ width: '100%', borderRadius: '6px', position: 'relative' }}>
-          <Camera onCapture={handleCapture} />
-        </div>
+        <h3>📷 Take a Photo</h3>
+        <Camera onCapture={handleCapture} />
+        {photo && <img src={photo} alt="Captured" style={{ width: '100%', borderRadius: '8px', marginTop: '10px' }} />}
+      </section>
 
-        {/* Display the captured photo */}
-        {photo && (
-          <img
-            src={photo}
-            alt="Captured Travel"
-            style={{
-              width: '100%',
-              borderRadius: '8px',
-              marginTop: '15px'
-            }}
-          />
+      {/* Location */}
+      <section style={{ marginBottom: '25px', width: '100%' }}>
+        <h3>📍 Location</h3>
+        <button onClick={handleLocation} style={{ marginBottom: '10px' }}>
+          📍 Set Location
+        </button>
+
+        {location && (
+          <p style={{ color: 'green' }}>
+            ✅ {location.lat.toFixed(4)}, {location.lng.toFixed(4)}
+          </p>
+        )}
+
+        {locationError && (
+          <p style={{ color: 'red' }}>{locationError}</p>
         )}
       </section>
 
-      {/* Map Section */}
+      {/* Map */}
       <section style={{ width: '100%' }}>
-        <h3 style={{ marginBottom: '10px' }}>
-          📍 Your Current Location
-        </h3>
-        <div style={{ 
-          width: '100%', 
-          height: '400px', 
-          borderRadius: '6px', 
+        <h3>🗺️ Your Current Location</h3>
+        <div style={{
+          width: '100%',
+          height: '400px',
+          borderRadius: '6px',
           overflow: 'hidden',
           boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
         }}>
@@ -108,4 +115,3 @@ function Features() {
 }
 
 export default Features;
-
