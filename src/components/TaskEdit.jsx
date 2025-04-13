@@ -1,3 +1,4 @@
+// src/components/TaskEdit.jsx
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Camera from './Camera';
@@ -8,7 +9,9 @@ const TaskEdit = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [task, setTask] = useState(null);
+  const [locationError, setLocationError] = useState(null);
 
+  // Load existing note
   useEffect(() => {
     const fetch = async () => {
       const notes = await getNotes();
@@ -18,7 +21,13 @@ const TaskEdit = () => {
     fetch();
   }, [id]);
 
+  // Update location
   const handleLocationUpdate = () => {
+    if (!navigator.geolocation) {
+      setLocationError('❌ Geolocation is not supported.');
+      return;
+    }
+
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         setTask(prev => ({
@@ -28,25 +37,29 @@ const TaskEdit = () => {
             lng: pos.coords.longitude
           }
         }));
+        setLocationError(null);
       },
-      (err) => alert('Failed to get location: ' + err.message)
+      (err) => {
+        setLocationError('❌ Failed to get location: ' + err.message);
+      }
     );
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    await saveNote(task); // Update existing note
+    await saveNote(task);
     navigate(`/detail/${task.id}`);
   };
 
   if (!task) return <p>Task not found</p>;
 
   return (
-    <div className="task-edit">
-      <h2>Edit Travel Note</h2>
+    <div className="task-form-container" style={{ maxWidth: '600px', margin: '0 auto', padding: '20px' }}>
+      <h2>✏️ Edit Travel Note</h2>
+
       <form onSubmit={handleSubmit}>
         <div className="form-group">
-          <label>Place Name</label>
+          <label>📍 Place Name</label>
           <input
             type="text"
             value={task.description}
@@ -56,7 +69,7 @@ const TaskEdit = () => {
         </div>
 
         <div className="form-group">
-          <label>Location</label>
+          <label>📡 Location</label>
           <button type="button" onClick={handleLocationUpdate}>
             {task.location ? 'Update Location' : 'Set Location'}
           </button>
@@ -67,23 +80,20 @@ const TaskEdit = () => {
               style={{ height: '200px', marginTop: '10px' }}
             />
           )}
+          {locationError && <p style={{ color: 'red' }}>{locationError}</p>}
         </div>
 
         <div className="form-group">
-          <label>Photo</label>
+          <label>📷 Photo</label>
           <Camera
             onCapture={(photo) => setTask({ ...task, photo })}
             initialPhoto={task.photo}
           />
         </div>
 
-        <div className="form-actions">
-          <button type="button" onClick={() => navigate(-1)}>
-            Cancel
-          </button>
-          <button type="submit" className="save-button">
-            Save Changes
-          </button>
+        <div className="form-actions" style={{ marginTop: '15px' }}>
+          <button type="button" onClick={() => navigate(-1)}>Cancel</button>
+          <button type="submit" className="save-button">💾 Save Changes</button>
         </div>
       </form>
     </div>

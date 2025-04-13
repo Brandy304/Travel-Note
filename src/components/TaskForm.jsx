@@ -1,3 +1,4 @@
+// src/components/TaskForm.jsx
 import React, { useState } from 'react';
 import Camera from './Camera';
 import { saveNote } from '../db';
@@ -13,10 +14,10 @@ const TaskForm = ({ onSubmit }) => {
   const [locationError, setLocationError] = useState(null);
   const navigate = useNavigate();
 
-  // Function to get user's current location
+  // Get current geolocation with permission error handling
   const handleLocation = () => {
     if (!navigator.geolocation) {
-      setLocationError('❌ Geolocation not supported by your browser.');
+      setLocationError('❌ Geolocation is not supported by your browser.');
       return;
     }
 
@@ -29,48 +30,47 @@ const TaskForm = ({ onSubmit }) => {
             lng: pos.coords.longitude
           }
         }));
-        setLocationError(null); // Clear any previous error
+        setLocationError(null);
       },
       (err) => {
-        setLocationError('❌ Location access denied: ' + err.message);
+        const errorMsg =
+          err.code === 1
+            ? '❌ Permission denied. Please allow location access.'
+            : `❌ Failed to get location: ${err.message}`;
+        setLocationError(errorMsg);
       }
     );
   };
 
-  // Function to handle form submission
+  // Save the note
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Check if both name and location are provided
     if (task.name.trim() && task.location) {
       const note = {
-        id: Date.now(), // Unique ID for each note
+        id: Date.now(),
         description: task.name,
         location: task.location,
         photo: task.photo,
         date: new Date().toLocaleString()
       };
 
-      await saveNote(note);         // Save the note to IndexedDB
-      onSubmit?.(note);             // Optional callback after saving note
-      setTask({ name: '', location: null, photo: null });  // Reset the form fields
-      navigate('/notes');           // Navigate to notes page after saving
+      await saveNote(note);
+      onSubmit?.(note);
+      setTask({ name: '', location: null, photo: null });
+      navigate('/notes');
     } else {
       alert('⚠️ Please provide both the place name and your location.');
     }
   };
 
   return (
-    <div className="task-form-container" style={{ maxWidth: '600px', margin: '0 auto' }}>
-      {/* Back to Home Button */}
-      <button onClick={() => navigate('/')} style={{ marginBottom: '20px' }}>
-        ← Back to Home
-      </button>
+    <div className="task-form-container" style={{ maxWidth: '600px', margin: '0 auto', padding: '20px' }}>
+      <button onClick={() => navigate('/')} className="back-button">← Back to Home</button>
 
       <form onSubmit={handleSubmit} className="task-form">
         <h2>📝 Add New Travel Note</h2>
 
-        {/* Name Input */}
         <label htmlFor="place">📍 Where did you go?</label>
         <input
           id="place"
@@ -81,7 +81,6 @@ const TaskForm = ({ onSubmit }) => {
           required
         />
 
-        {/* Location Button & Error Message */}
         <div className="form-group">
           <button type="button" onClick={handleLocation}>
             {task.location ? '📌 Location Saved' : '📍 Get Current Location'}
@@ -92,18 +91,14 @@ const TaskForm = ({ onSubmit }) => {
             </div>
           )}
           {locationError && (
-            <div style={{ color: 'red', marginTop: '5px' }}>
-              {locationError}
-            </div>
+            <div style={{ color: 'red', marginTop: '5px' }}>{locationError}</div>
           )}
         </div>
 
-        {/* Camera Component */}
         <div className="form-group camera-container">
           <Camera onCapture={(photo) => setTask({ ...task, photo })} />
         </div>
 
-        {/* Save Button */}
         <button type="submit" disabled={!task.location}>
           ✅ Save Travel Note
         </button>
