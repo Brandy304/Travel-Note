@@ -1,4 +1,3 @@
-// src/components/TaskForm.jsx
 import React, { useState } from 'react';
 import Camera from './Camera';
 import { saveNote } from '../db';
@@ -12,9 +11,12 @@ const TaskForm = ({ onSubmit }) => {
   });
 
   const [locationError, setLocationError] = useState(null);
+  const [manualLat, setManualLat] = useState('');
+  const [manualLng, setManualLng] = useState('');
+
   const navigate = useNavigate();
 
-  // Get current geolocation with permission error handling
+  // Automatically get location using Geolocation API
   const handleLocation = () => {
     if (!navigator.geolocation) {
       setLocationError('❌ Geolocation is not supported by your browser.');
@@ -33,24 +35,30 @@ const TaskForm = ({ onSubmit }) => {
         setLocationError(null);
       },
       (err) => {
-        const errorMsg =
-          err.code === 1
-            ? '❌ Permission denied. Please allow location access.'
-            : `❌ Failed to get location: ${err.message}`;
-        setLocationError(errorMsg);
+        setLocationError('❌ Failed to get location: ' + err.message);
       }
     );
   };
 
-  // Save the note
+  // Submit travel note
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (task.name.trim() && task.location) {
+    // Try to use manual location if geolocation fails
+    let finalLocation = task.location;
+
+    if (!finalLocation && manualLat && manualLng) {
+      finalLocation = {
+        lat: parseFloat(manualLat),
+        lng: parseFloat(manualLng)
+      };
+    }
+
+    if (task.name.trim() && finalLocation) {
       const note = {
         id: Date.now(),
         description: task.name,
-        location: task.location,
+        location: finalLocation,
         photo: task.photo,
         date: new Date().toLocaleString()
       };
@@ -60,17 +68,20 @@ const TaskForm = ({ onSubmit }) => {
       setTask({ name: '', location: null, photo: null });
       navigate('/notes');
     } else {
-      alert('⚠️ Please provide both the place name and your location.');
+      alert('⚠️ Please enter name and location (auto or manual).');
     }
   };
 
   return (
-    <div className="task-form-container" style={{ maxWidth: '600px', margin: '0 auto', padding: '20px' }}>
-      <button onClick={() => navigate('/')} className="back-button">← Back to Home</button>
+    <div className="task-form-container" style={{ maxWidth: '600px', margin: '0 auto' }}>
+      <button onClick={() => navigate('/')} style={{ marginBottom: '20px' }}>
+        ← Back to Home
+      </button>
 
       <form onSubmit={handleSubmit} className="task-form">
         <h2>📝 Add New Travel Note</h2>
 
+        {/* Name Input */}
         <label htmlFor="place">📍 Where did you go?</label>
         <input
           id="place"
@@ -81,6 +92,7 @@ const TaskForm = ({ onSubmit }) => {
           required
         />
 
+        {/* Location Fetch Button */}
         <div className="form-group">
           <button type="button" onClick={handleLocation}>
             {task.location ? '📌 Location Saved' : '📍 Get Current Location'}
@@ -91,15 +103,42 @@ const TaskForm = ({ onSubmit }) => {
             </div>
           )}
           {locationError && (
-            <div style={{ color: 'red', marginTop: '5px' }}>{locationError}</div>
+            <div style={{ color: 'red', marginTop: '5px' }}>
+              {locationError}<br />
+              You may enter location manually:
+            </div>
+          )}
+
+          {/* Manual Location Inputs */}
+          {locationError && (
+            <div style={{ marginTop: '10px' }}>
+              <input
+                type="number"
+                placeholder="Latitude"
+                value={manualLat}
+                onChange={(e) => setManualLat(e.target.value)}
+                step="0.0001"
+                style={{ marginBottom: '5px', width: '100%' }}
+              />
+              <input
+                type="number"
+                placeholder="Longitude"
+                value={manualLng}
+                onChange={(e) => setManualLng(e.target.value)}
+                step="0.0001"
+                style={{ width: '100%' }}
+              />
+            </div>
           )}
         </div>
 
+        {/* Camera Input */}
         <div className="form-group camera-container">
           <Camera onCapture={(photo) => setTask({ ...task, photo })} />
         </div>
 
-        <button type="submit" disabled={!task.location}>
+        {/* Submit Button */}
+        <button type="submit">
           ✅ Save Travel Note
         </button>
       </form>

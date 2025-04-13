@@ -1,21 +1,26 @@
 {
   "short_name": "TravelNote",
-  "name": "Travel Note App",
+  "name": "Travel Note - Capture Your Journey",
   "icons": [
     {
       "src": "/travel-note-logo.png",
       "type": "image/png",
-      "sizes": "192x192"
+      "sizes": "192x192",
+      "purpose": "any maskable"
     },
     {
       "src": "/travel-note-logo.png",
       "type": "image/png",
-      "sizes": "512x512"
+      "sizes": "512x512",
+      "purpose": "any maskable"
     }
   ],
-  "start_url": "/",
+  "start_url": "/?source=pwa",
   "display": "standalone",
-  "orientation": "portrait",
-  "theme_color": "#000000",
-  "background_color": "#ffffff"
+  "orientation": "portrait-primary",
+  "theme_color": "#6c5ce7",
+  "background_color": "#f4ecf7",
+  "scope": "/",
+  "description": "Travel Note helps you document your travels with location, photos, and notes.",
+  "lang": "en-US"
 }

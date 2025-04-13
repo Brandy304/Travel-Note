@@ -11,7 +11,7 @@ const TaskEdit = () => {
   const [task, setTask] = useState(null);
   const [locationError, setLocationError] = useState(null);
 
-  // Load existing note
+  // Load the task
   useEffect(() => {
     const fetch = async () => {
       const notes = await getNotes();
@@ -21,10 +21,9 @@ const TaskEdit = () => {
     fetch();
   }, [id]);
 
-  // Update location
   const handleLocationUpdate = () => {
     if (!navigator.geolocation) {
-      setLocationError('❌ Geolocation is not supported.');
+      setLocationError('❌ Your browser does not support Geolocation.');
       return;
     }
 
@@ -40,7 +39,7 @@ const TaskEdit = () => {
         setLocationError(null);
       },
       (err) => {
-        setLocationError('❌ Failed to get location: ' + err.message);
+        setLocationError('❌ Location error: ' + err.message);
       }
     );
   };
@@ -51,10 +50,14 @@ const TaskEdit = () => {
     navigate(`/detail/${task.id}`);
   };
 
-  if (!task) return <p>Task not found</p>;
+  if (!task) return <p>Task not found.</p>;
 
   return (
-    <div className="task-form-container" style={{ maxWidth: '600px', margin: '0 auto', padding: '20px' }}>
+    <div className="task-form-container" style={{ maxWidth: '600px', margin: '0 auto' }}>
+      <button onClick={() => navigate('/notes')} style={{ marginBottom: '20px' }}>
+        ← Back to Notes
+      </button>
+
       <h2>✏️ Edit Travel Note</h2>
 
       <form onSubmit={handleSubmit}>
@@ -71,7 +74,7 @@ const TaskEdit = () => {
         <div className="form-group">
           <label>📡 Location</label>
           <button type="button" onClick={handleLocationUpdate}>
-            {task.location ? 'Update Location' : 'Set Location'}
+            {task.location ? '📌 Update Location' : '📍 Set Location'}
           </button>
           {task.location && (
             <Map
@@ -101,3 +104,4 @@ const TaskEdit = () => {
 };
 
 export default TaskEdit;
+
