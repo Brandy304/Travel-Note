@@ -23,6 +23,7 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then(keys => 
       Promise.all(
+        // eslint-disable-next-line array-callback-return
         keys.map(key => {
           if (key !== CACHE_NAME) {
             return caches.delete(key);
